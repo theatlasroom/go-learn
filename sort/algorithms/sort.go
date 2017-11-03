@@ -26,12 +26,14 @@ import "log"
 // 	- https://github.com/buger/goterm
 // 	- https://github.com/ttacon/chalk
 // TODO: figure out how to output in different colours
+const Bubble = 0
+const Insertion = 1
 
 // Bubble will execute a bubble sort
 // takes an array of unsorted integers and sorts them
 // returns the number of operations used
 // sorts in ascending order, smallest on the left, largest right
-func Bubble(data []int) (int, int, int, error) {
+func bubble(data []int) (int, int, int, error) {
 	log.Println("Bubble Sort")
 	log.Println("==========================")
 	log.Printf("Unsorted data %v", data)
@@ -57,13 +59,20 @@ func Bubble(data []int) (int, int, int, error) {
 	return iterations, comparisons, len(data), nil
 }
 
-// Execute will run the sort
-func Execute() {
-	testData := []int{0, 5, 3, 7, 4, 12, 1, 8, 11, 2, 6, 9, 10}
-	iterations, comparisons, items, err := Bubble(testData)
+func formatSortOutput(iterations, comparisons, items int, err error) {
 	if err != nil {
 		log.Println(err)
 	} else {
 		log.Printf("%d operations through %d items with %d comparisons made", iterations, items, comparisons)
+	}
+}
+
+// Sort will run the sort
+func Sort(sampleData []int, sortType int) {
+	switch sortType {
+	case Bubble:
+		formatSortOutput(bubble(sampleData))
+		// default:
+		// error.Error()
 	}
 }
