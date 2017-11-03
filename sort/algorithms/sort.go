@@ -1,6 +1,9 @@
 package sort
 
-import "log"
+import (
+	"errors"
+	"log"
+)
 
 /**
 * TODO: Implement basic sorts
@@ -27,7 +30,8 @@ import "log"
 // 	- https://github.com/ttacon/chalk
 // TODO: figure out how to output in different colours
 const Bubble = 0
-const Insertion = 1
+const Selection = 1
+const Insertion = 2
 
 // Bubble will execute a bubble sort
 // takes an array of unsorted integers and sorts them
@@ -59,6 +63,10 @@ func bubble(data []int) (int, int, int, error) {
 	return iterations, comparisons, len(data), nil
 }
 
+// func selection(data []int) (int, int, int, error) {
+//
+// }
+
 func formatSortOutput(iterations, comparisons, items int, err error) {
 	if err != nil {
 		log.Println(err)
@@ -67,12 +75,16 @@ func formatSortOutput(iterations, comparisons, items int, err error) {
 	}
 }
 
+// type SortError
+
 // Sort will run the sort
-func Sort(sampleData []int, sortType int) {
+func Sort(sampleData []int, sortType int) (bool, error) {
+	var sortError error
 	switch sortType {
 	case Bubble:
 		formatSortOutput(bubble(sampleData))
-		// default:
-		// error.Error()
+	default:
+		sortError = errors.New("That sort method does not exist")
 	}
+	return true, sortError
 }
