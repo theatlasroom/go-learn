@@ -29,15 +29,36 @@ import (
 // 	- https://github.com/buger/goterm
 // 	- https://github.com/ttacon/chalk
 // TODO: figure out how to output in different colours
-const Bubble = 0
-const Selection = 1
-const Insertion = 2
+// protip: iota increments at each const declaration
+const (
+	Bubble    = iota
+	Selection = iota
+	Insertion = iota
+)
+
+type Result struct {
+	Data                            []int
+	Comparisons, Iterations, Length int
+	Error                           error
+}
+
+func formatResult(
+	data []int,
+	iterations, comparisons, length int) (Result, error) {
+	return Result{
+		Data:        data,
+		Length:      length,
+		Comparisons: comparisons,
+		Iterations:  iterations,
+		Error:       nil,
+	}, nil
+}
 
 // Bubble will execute a bubble sort
 // takes an array of unsorted integers and sorts them
 // returns the number of operations used
 // sorts in ascending order, smallest on the left, largest right
-func bubble(data []int) (int, int, int, error) {
+func bubble(data []int) (Result, error) {
 	log.Println("Bubble Sort")
 	log.Println("==========================")
 	log.Printf("Unsorted data %v", data)
@@ -60,31 +81,33 @@ func bubble(data []int) (int, int, int, error) {
 		}
 	}
 	log.Printf("Sorted data %v", temp)
-	return iterations, comparisons, len(data), nil
+	return formatResult(temp, iterations, comparisons, len(temp))
 }
 
 // func selection(data []int) (int, int, int, error) {
 //
 // }
 
-func formatSortOutput(iterations, comparisons, items int, err error) {
-	if err != nil {
-		log.Println(err)
+func formatSortOutput(res Result) {
+	if res.Error != nil {
+		log.Println(res.Error)
 	} else {
-		log.Printf("%d operations through %d items with %d comparisons made", iterations, items, comparisons)
+		log.Printf("%d operations through %d items with %d comparisons made", res.Iterations, res.Length, res.Comparisons)
 	}
 }
 
 // type SortError
 
 // Sort will run the sort
-func Sort(sampleData []int, sortType int) (bool, error) {
+func Sort(sampleData []int, sortType int) ([]int, error) {
 	var sortError error
 	switch sortType {
 	case Bubble:
-		formatSortOutput(bubble(sampleData))
+		res, err := bubble(sampleData)
+		formatSortOutput(res)
+		return res.Data, err
 	default:
 		sortError = errors.New("That sort method does not exist")
 	}
-	return true, sortError
+	return nil, sortError
 }
