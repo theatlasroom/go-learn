@@ -54,14 +54,18 @@ func formatResult(
 	}, nil
 }
 
+// func ExtractData
+
 // Bubble will execute a bubble sort
 // takes an array of unsorted integers and sorts them
 // returns the number of operations used
 // sorts in ascending order, smallest on the left, largest right
-func bubble(data []int) (Result, error) {
-	log.Println("Bubble Sort")
-	log.Println("==========================")
-	log.Printf("Unsorted data %v", data)
+func bubble(data []int, verbose bool) (Result, error) {
+	if verbose {
+		log.Println("Bubble Sort")
+		log.Println("==========================")
+		log.Printf("Unsorted data %v", data)
+	}
 	temp := data[:]
 	iterations, comparisons := 0, 0
 	end := (len(data) - 1)
@@ -80,7 +84,9 @@ func bubble(data []int) (Result, error) {
 			}
 		}
 	}
-	log.Printf("Sorted data %v", temp)
+	if verbose {
+		log.Printf("Sorted data %v", temp)
+	}
 	return formatResult(temp, iterations, comparisons, len(temp))
 }
 
@@ -88,7 +94,7 @@ func bubble(data []int) (Result, error) {
 //
 // }
 
-func formatSortOutput(res Result) {
+func stats(res Result) {
 	if res.Error != nil {
 		log.Println(res.Error)
 	} else {
@@ -99,12 +105,20 @@ func formatSortOutput(res Result) {
 // type SortError
 
 // Sort will run the sort
-func Sort(sampleData []int, sortType int) ([]int, error) {
+func Sort(sampleData []int, sortType int, verboseOpts ...bool) ([]int, error) {
+	var verbose bool
+	if len(verboseOpts) < 1 {
+		verbose = false
+	} else {
+		verbose = verboseOpts[0]
+	}
 	var sortError error
 	switch sortType {
 	case Bubble:
-		res, err := bubble(sampleData)
-		formatSortOutput(res)
+		res, err := bubble(sampleData, verbose)
+		if verbose {
+			stats(res)
+		}
 		return res.Data, err
 	default:
 		sortError = errors.New("That sort method does not exist")
