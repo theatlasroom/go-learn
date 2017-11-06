@@ -56,7 +56,7 @@ func formatResult(
 
 // func ExtractData
 
-// Bubble will execute a bubble sort
+// Bubble sort
 // takes an array of unsorted integers and sorts them
 // returns the number of operations used
 // sorts in ascending order, smallest on the left, largest right
@@ -90,6 +90,54 @@ func bubble(data []int, verbose bool) (Result, error) {
 	return formatResult(temp, iterations, comparisons, len(temp))
 }
 
+// Selection sort
+// takes an array of unsorted integers and sorts them
+// returns the number of operations used
+// sorts in ascending order, smallest on the left, largest right
+func selection(data []int, verbose bool) (Result, error) {
+	if verbose {
+		log.Println("Selection Sort")
+		log.Println("==========================")
+		log.Printf("Unsorted data %v", data)
+	}
+
+	// obtain a slice
+	// return early if we have 1 or less items
+	total := len(data)
+	if total <= 1 {
+		return formatResult(data, 0, 0, total)
+	}
+
+	comparisons, iterations := 0, 0
+	sorted := false
+	arr := data[:]
+	smallestIndex, total := 0, len(data)
+
+	for !sorted {
+		if smallestIndex < total {
+			smallest := arr[smallestIndex]
+			iterations++
+			for index := smallestIndex + 1; index < total; index++ {
+				elem := arr[index]
+				comparisons++
+				if elem < smallest {
+					arr[index] = smallest
+					arr[smallestIndex] = elem
+					smallest = elem
+				}
+			}
+			smallestIndex++
+		} else {
+			sorted = true
+		}
+	}
+
+	if verbose {
+		log.Printf("Sorted data %v", arr)
+	}
+	return formatResult(arr, iterations, comparisons, total)
+}
+
 // func selection(data []int) (int, int, int, error) {
 //
 // }
@@ -105,7 +153,7 @@ func stats(res Result) {
 // type SortError
 
 // Sort will run the sort
-func Sort(sampleData []int, sortType int, verboseOpts ...bool) ([]int, error) {
+func Sort(sortType int, sampleData []int, verboseOpts ...bool) ([]int, error) {
 	var verbose bool
 	if len(verboseOpts) < 1 {
 		verbose = false
@@ -119,6 +167,16 @@ func Sort(sampleData []int, sortType int, verboseOpts ...bool) ([]int, error) {
 		if verbose {
 			stats(res)
 		}
+		log.Println(res)
+		return res.Data, err
+	case Selection:
+		log.Println(sampleData)
+		res, err := selection(sampleData, verbose)
+		log.Println(res, err)
+		if verbose {
+			stats(res)
+		}
+		log.Println(res)
 		return res.Data, err
 	default:
 		sortError = errors.New("That sort method does not exist")
