@@ -12,16 +12,40 @@ var (
 	sorted   = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 )
 
-func TestBubble(t *testing.T) {
-	data := unsorted[:]
-	result, _ := sort.Sort(data, sort.Bubble)
-
-	if !reflect.DeepEqual(result, sorted) {
+func checkResult(testData, expected, actual []int, t *testing.T) {
+	if !reflect.DeepEqual(actual, expected) {
 		t.Error(
-			"\nFor", unsorted,
-			"\nexpected", sorted,
-			"\ngot", result,
+			"\nFor", testData,
+			"\nexpected", expected,
+			"\ngot", actual,
 		)
 	}
-	// fmt.Println(arr)
+}
+
+func TestEmptyDataSets(t *testing.T) {
+	var empty, result []int
+	var _ error
+	result, _ = sort.Sort(sort.Bubble, empty)
+	checkResult(empty, empty, result, t)
+
+	result, _ = sort.Sort(sort.Selection, empty)
+	checkResult(empty, empty, result, t)
+}
+
+func TestBubble(t *testing.T) {
+	// data :=
+	data := make([]int, len(unsorted))
+	copy(data, unsorted)
+	result, _ := sort.Sort(sort.Bubble, data)
+
+	checkResult(unsorted, sorted, result, t)
+}
+
+func TestSelection(t *testing.T) {
+	// data :=
+	data := make([]int, len(unsorted))
+	copy(data, unsorted)
+	result, _ := sort.Sort(sort.Selection, data)
+
+	checkResult(unsorted, sorted, result, t)
 }
