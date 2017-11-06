@@ -36,6 +36,7 @@ const (
 	Insertion = iota
 )
 
+// Result combines stats and sorted data to provide more information
 type Result struct {
 	Data                            []int
 	Comparisons, Iterations, Length int
@@ -138,10 +139,6 @@ func selection(data []int, verbose bool) (Result, error) {
 	return formatResult(arr, iterations, comparisons, total)
 }
 
-// func selection(data []int) (int, int, int, error) {
-//
-// }
-
 func stats(res Result) {
 	if res.Error != nil {
 		log.Println(res.Error)
@@ -150,7 +147,28 @@ func stats(res Result) {
 	}
 }
 
-// type SortError
+// Insertion sort
+// takes an array of unsorted integers and sorts them
+// returns the number of operations used
+// sorts in ascending order, smallest on the left, largest right
+func insertion(data []int, verbose bool) (Result, error) {
+	if verbose {
+		log.Println("Insertion Sort")
+		log.Println("==========================")
+		log.Printf("Unsorted data %v", data)
+	}
+
+	// obtain a slice
+	// return early if we have 1 or less items
+	total := len(data)
+	if total <= 1 {
+		return formatResult(data, 0, 0, total)
+	}
+
+	iterations, comparisons := 0, 0
+
+	return formatResult(data, iterations, comparisons, total)
+}
 
 // Sort will run the sort
 func Sort(sortType int, sampleData []int, verboseOpts ...bool) ([]int, error) {
@@ -167,16 +185,18 @@ func Sort(sortType int, sampleData []int, verboseOpts ...bool) ([]int, error) {
 		if verbose {
 			stats(res)
 		}
-		log.Println(res)
 		return res.Data, err
 	case Selection:
-		log.Println(sampleData)
 		res, err := selection(sampleData, verbose)
-		log.Println(res, err)
 		if verbose {
 			stats(res)
 		}
-		log.Println(res)
+		return res.Data, err
+	case Insertion:
+		res, err := insertion(sampleData, verbose)
+		if verbose {
+			stats(res)
+		}
 		return res.Data, err
 	default:
 		sortError = errors.New("That sort method does not exist")

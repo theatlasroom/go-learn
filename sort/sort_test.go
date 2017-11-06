@@ -30,6 +30,9 @@ func TestEmptyDataSets(t *testing.T) {
 
 	result, _ = sort.Sort(sort.Selection, empty)
 	checkResult(empty, empty, result, t)
+
+	result, _ = sort.Sort(sort.Insertion, empty)
+	checkResult(empty, empty, result, t)
 }
 
 func TestBubble(t *testing.T) {
