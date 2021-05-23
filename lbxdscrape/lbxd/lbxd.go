@@ -31,12 +31,12 @@ type Posters []Poster
 
 // Film full metadata for a film
 type Film struct {
-	ID            int64
-	Name          string
-	OriginalTitle string
-	Year          int16
-	URL           string
-	PosterURL     string
+	ID            int64  `json:"id"`
+	Name          string `json:"title"`
+	OriginalTitle string `json:"searchTitle"`
+	Year          int16  `json:"year"`
+	URL           string `json:"url"`
+	PosterURL     string `json:"posterUrl"`
 }
 
 type Films []Film
