@@ -1,8 +1,14 @@
 package main
 
+// TODO: Expose scraped data via graphql
+// TODO: scrape paginated data
+// TODO: concurrency
+
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -15,17 +21,25 @@ const target = "https://letterboxd.com/junior1z1337/watchlist/"
 // TODO: then LATER do the full scrape once we have collated all the links
 
 const (
-	filmContainers string = ".poster-list .linked-film-poster"
-	// filmContainers    string = ".poster-list .film-poster.linked-film-poster"
+	posterContainers  string = ".poster-list .film-poster"
 	filmOriginalTitle string = "a.frame"
 )
+
+type poster struct {
+	ID     int64
+	URL    string
+	Height int16
+	Width  int16
+}
+
+type posters []poster
 
 type film struct {
 	ID   int64
 	Name string
 	// used to query for the specific movie
 	OriginalTitle string
-	Year          int8
+	Year          int16
 	URL           string
 	PosterURL     string
 }
@@ -39,15 +53,21 @@ func cleanString(s string) string {
 
 func cleanInt(val, errString string, precision int) int64 {
 	i, err := strconv.ParseInt(val, 10, precision)
+
+	// TODO: this should probably be custom errors using error.New
 	if err != nil {
-		str := fmt.Errorf(err.Error(), errString, val)
-		log.Fatal(str)
+		errorString := fmt.Errorf(err.Error(), errString, val)
+		handleError(errorString)
 	}
 	return i
 }
 
 func cleanInt64(val, errString string) int64 {
 	return cleanInt(val, errString, 64)
+}
+
+func cleanInt16(val, errString string) int16 {
+	return int16(cleanInt(val, errString, 16))
 }
 
 func cleanInt8(val, errString string) int8 {
@@ -65,6 +85,11 @@ func getI8(e *colly.HTMLElement, attr, errString string) int8 {
 	return cleanInt8(val, errString)
 }
 
+func getI16(e *colly.HTMLElement, attr, errString string) int16 {
+	val := cleanString(e.Attr(attr))
+	return cleanInt16(val, errString)
+}
+
 func getI64(e *colly.HTMLElement, attr, errString string) int64 {
 	val := cleanString(e.Attr(attr))
 	return cleanInt64(val, errString)
@@ -75,35 +100,51 @@ func getString(e *colly.HTMLElement, attr string) string {
 }
 
 func getChildString(e *colly.HTMLElement, sel, attr string) string {
-	// fmt.Println("OT", e.ChildAttr(sel, attr), e)
 	el := e.DOM.Find(sel)
-	fmt.Println(e.Name, e.Text, e.Attr("class"))
 	v, ok := el.Attr(attr)
 	if !ok {
-		fmt.Println("BUMMER")
+		fmt.Println("BUMMER", v)
 	}
-	fmt.Println("OT", e.ChildAttr(sel, attr), v)
-	// fmt.Println("OT", e.ChildAttr(sel, attr), e.DOM.Find(sel).Attr(attr))
 	return cleanString(e.ChildAttr(sel, attr))
 }
-
-// func getChildText(e *colly.HTMLElement, sel string) string {
-// 	// fmt.Println(e.ChildText(sel))
-// 	ed := e.DOM.Closest(sel)
-// 	fmt.Println(ed.Attr())
-// 	return cleanString(ed.Text())
-// 	// return cleanString(e.ChildText(sel))
-// }
 
 func extractFilm(e *colly.HTMLElement) film {
 	// fmt.Println(e.DOM.Html())
 	return film{
-		ID:        getI64(e, "data-film-id", "Failed to get ID"),
-		Name:      getString(e, "data-film-name"),
-		URL:       getString(e, "data-target-link"),
-		PosterURL: getString(e, "data-poster-url"),
-		// Year:          getI8(e, "data-film-release-year", "Failed to get Year"),
+		ID:            getI64(e, "data-film-id", "Failed to get ID"),
+		Name:          getString(e, "data-film-name"),
+		URL:           getString(e, "data-film-slug"),
+		PosterURL:     getString(e, "data-poster-url"),
+		Year:          getI16(e, "data-film-release-year", "Failed to get Year"),
 		OriginalTitle: getChildString(e, filmOriginalTitle, "data-original-title"),
+	}
+}
+
+func extractPoster(e *colly.HTMLElement) poster {
+	h := cleanInt16(getChildString(e, ".image", "height"), "Failed to get height")
+	w := cleanInt16(getChildString(e, ".image", "width"), "Failed to get width")
+	return poster{
+		ID:     getI64(e, "data-film-id", "Failed to get ID"),
+		URL:    getString(e, "data-film-slug"),
+		Height: h,
+		Width:  w,
+	}
+}
+
+func (p poster) metadataURLString() string {
+	return fmt.Sprintf("https://letterboxd.com/ajax/poster%vmenu/linked/%dx%d/", p.URL, p.Width, p.Height)
+}
+
+func (p poster) metadataURL() *url.URL {
+	u, err := url.Parse(p.metadataURLString())
+	handleError(err)
+
+	return u
+}
+
+func handleError(err error) {
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -111,27 +152,35 @@ func main() {
 	fmt.Println("Scraping", target)
 	c := colly.NewCollector()
 
+	var ps posters
 	var fs films
 
 	// Extract all visible movie titles
-	c.OnHTML(filmContainers, func(e *colly.HTMLElement) {
-		nf := extractFilm(e)
-		fmt.Println(nf)
-		fs = append(fs, nf)
+	c.OnHTML(posterContainers, func(e *colly.HTMLElement) {
+		nf := extractPoster(e)
+		target := nf.metadataURLString()
+
+		visited, err := c.HasVisited(target)
+		handleError(err)
+
+		if !visited {
+			err := c.Request(http.MethodGet, target, nil, nil, nil)
+			handleError(err)
+			ps = append(ps, nf)
+		}
+	})
+	// ajax response
+	c.OnHTML(".linked-film-poster", func(e *colly.HTMLElement) {
+		fs = append(fs, extractFilm(e))
 	})
 
-	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished scraping", r.Request.URL)
-	})
-
-	// Move through the pagination
-	// c.OnHTML("a[href]", func(e *colly.HTMLElement) {
-	// 	e.Request.Visit(e.Attr("href"))
+	// c.OnScraped(func(r *colly.Response) {
+	// 	fmt.Println("Finished scraping", r.Request.URL)
 	// })
 
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
-	})
-
+	// Kick off the scraper and block until we complete
 	c.Visit(target)
+	c.Wait()
+
+	fmt.Println("DONESKIES!", fs)
 }
