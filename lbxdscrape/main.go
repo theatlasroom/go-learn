@@ -19,7 +19,7 @@ func startServer() {
 	app := fiber.New()
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
+		return c.SendFile("./client/public/index.html")
 	})
 
 	app.Get("/api/films", func(c *fiber.Ctx) error {
