@@ -1,5 +1,5 @@
 <script>
-import FilmsList from "./components/films/List.vue";
+import FilmsList from "./components/FilmList.vue";
 
 export default {
   name: "App",
@@ -10,7 +10,15 @@ export default {
 </script>
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <films-list></films-list>
+    <header>
+      <section class="title"></section>
+      <section class="summary-stats">
+        <!-- TODO: stats like % watched, total items in watched list, total watched -->
+      </section>
+    </header>
+    <main>
+      <!-- inifinite scroll, probably using an intersection observer to auto fetch the next page on scroll -->
+      <films-list />
+    </main>
   </div>
 </template>

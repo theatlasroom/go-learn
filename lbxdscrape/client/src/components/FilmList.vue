@@ -1,8 +1,12 @@
 <script>
-import { fetchFilms } from "../../api.js";
+import { fetchFilms } from "../api.js";
+import FilmItem from "./FilmItem.vue";
 
 export default {
   name: "FilmsList",
+  components: {
+    FilmItem,
+  },
   props: {},
   created() {
     this.fetchData();
@@ -32,7 +36,9 @@ export default {
 <template>
   <section id="films">
     <ul v-if="films.length">
-      <li v-for="film in films" :key="film.id">{{ film.title }}</li>
+      <li v-for="film in films" :key="film.id">
+        <film-item :film="film" />
+      </li>
     </ul>
     <p v-else-if="loading">{{ "loading..." }}</p>
     <p v-else>No films available</p>
