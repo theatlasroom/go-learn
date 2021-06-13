@@ -37,6 +37,7 @@ type Film struct {
 	Year          int16  `json:"year"`
 	URL           string `json:"url"`
 	PosterURL     string `json:"posterUrl"`
+	ImageURL      string `json:"imageUrl"`
 }
 
 type Films []Film
@@ -98,6 +99,11 @@ func getChildString(e *colly.HTMLElement, sel, attr string) string {
 	return cleanString(e.ChildAttr(sel, attr))
 }
 
+func getImageURL(e *colly.HTMLElement, sel, attr string) string {
+	img := e.DOM.Find(sel)
+	return cleanString(img.AttrOr(attr, ""))
+}
+
 func extractFilm(e *colly.HTMLElement) Film {
 	return Film{
 		ID:            getI64(e, "data-film-id", "Failed to get ID"),
@@ -106,6 +112,8 @@ func extractFilm(e *colly.HTMLElement) Film {
 		PosterURL:     getString(e, "data-poster-url"),
 		Year:          getI16(e, "data-film-release-year", "Failed to get Year"),
 		OriginalTitle: getChildString(e, filmOriginalTitle, "title"),
+		// TODO: might need to do extra extraction for metadata, or maybe we resolve the image later from another source
+		ImageURL: getImageURL(e, "image.img", "src"),
 	}
 }
 

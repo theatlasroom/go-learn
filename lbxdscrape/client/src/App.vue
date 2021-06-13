@@ -1,9 +1,13 @@
 <script>
-import FilmsList from "./components/FilmList.vue";
+import FilmsList from "./components/FilmsList.vue";
+import PageTitle from "./components/PageTitle.vue";
+import SummaryStats from "./components/SummaryStats.vue";
 
 export default {
   name: "App",
   components: {
+    PageTitle,
+    SummaryStats,
     FilmsList,
   },
 };
@@ -11,10 +15,8 @@ export default {
 <template>
   <div id="app">
     <header>
-      <section class="title"></section>
-      <section class="summary-stats">
-        <!-- TODO: stats like % watched, total items in watched list, total watched -->
-      </section>
+      <page-title />
+      <summary-stats />
     </header>
     <main>
       <!-- inifinite scroll, probably using an intersection observer to auto fetch the next page on scroll -->
